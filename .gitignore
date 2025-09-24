@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS / editors
+.DS_Store
+.vscode/
+
+# Envs / secrets
+.env
+env
+venv/
+
+# Local workspace (imported repos)
+workspace/

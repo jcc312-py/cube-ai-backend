@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Testing Interface</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 30px;
+        }
+        .endpoint {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .endpoint:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .endpoint-header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .method {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        .get { background: #28a745; color: white; }
+        .post { background: #007bff; color: white; }
+        .put { background: #ffc107; color: black; }
+        .delete { background: #dc3545; color: white; }
+        .path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #333;
+            margin-left: 15px;
+        }
+        .description {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .endpoint-body {
+            padding: 20px;
+        }
+        .test-section {
+            margin-top: 15px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            box-sizing: border-box;
+        }
+        .input-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .api-status {
+            background: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 REST API Testing Interface</h1>
+            <p>Test your backend API endpoints directly from the browser</p>
+        </div>
+        
+        <div class="content">
+            <div class="api-status" id="apiStatus">
+                <span class="status-indicator status-offline" id="statusIndicator"></span>
+                <span id="statusText">Checking API status...</span>
+            </div>
+
+            <!-- Health Check -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method get">GET</span>
+                        <span class="path">/health</span>
+                        <span class="description">Check if the API is running</span>
+                    </div>
+                </div>
+                <div class="endpoint-body">
+                    <div class="test-section">
+                        <button class="test-button" onclick="testEndpoint('/health', 'GET')">Test Health Check</button>
+                        <div id="response-health" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Endpoint -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method post">POST</span>
+                        <span class="path">/chat</span>
+                        <span class="description">Send a message to the AI</span>
+                    </div>
+                </div>
+                <div class="endpoint-body">
+                    <div class="test-section">
+                        <div class="input-group">
+                            <label for="chat-message">Message:</label>
+                            <textarea id="chat-message" placeholder="Enter your message here...">Hello, how are you?</textarea>
+                        </div>
+                        <button class="test-button" onclick="testChat()">Send Message</button>
+                        <div id="response-chat" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Get Generated Files -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method get">GET</span>
+                        <span class="path">/files</span>
+                        <span class="description">Get list of generated files</span>
+                    </div>
+                </div>
+                <div class="endpoint-body">
+                    <div class="test-section">
+                        <button class="test-button" onclick="testEndpoint('/files', 'GET')">Get Files</button>
+                        <div id="response-files" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Get File Content -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method get">GET</span>
+                        <span class="path">/files/{filename}</span>
+                        <span class="description">Get content of a specific file</span>
+                    </div>
+                </div>
+                <div class="endpoint-body">
+                    <div class="test-section">
+                        <div class="input-group">
+                            <label for="filename">Filename:</label>
+                            <input type="text" id="filename" placeholder="Enter filename (e.g., example.py)">
+                        </div>
+                        <button class="test-button" onclick="testGetFile()">Get File Content</button>
+                        <div id="response-file" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Get Conversations -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method get">GET</span>
+                        <span class="path">/conversations</span>
+                        <span class="description">Get conversation history</span>
+                    </div>
+                </div>
+                <div class="endpoint-body">
+                    <div class="test-section">
+                        <button class="test-button" onclick="testEndpoint('/conversations', 'GET')">Get Conversations</button>
+                        <div id="response-conversations" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Get Example Workflow -->
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method get">GET</span>
+                        <span class="path">/example-workflow</span>
+                        <span class="description">Get example workflow</span>
+                    </div>
+                </div>
+                <div class="endpoint-body">
+                    <div class="test-section">
+                        <button class="test-button" onclick="testEndpoint('/example-workflow', 'GET')">Get Example Workflow</button>
+                        <div id="response-workflow" class="response" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Check API status on page load
+        window.onload = function() {
+            checkApiStatus();
+        };
+
+        async function checkApiStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'API is online and running';
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'API is offline - make sure the backend is running on port 8000';
+            }
+        }
+
+        async function testEndpoint(endpoint, method) {
+            const responseDiv = document.getElementById(`response-${endpoint.substring(1)}`);
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="loading">Testing endpoint...</div>';
+            responseDiv.className = 'response';
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <div class="status">Status: ${response.status} ${response.statusText}</div>
+                    <div>Response:</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                responseDiv.className = response.ok ? 'response success' : 'response error';
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="status">Error</div>
+                    <div>${error.message}</div>
+                `;
+                responseDiv.className = 'response error';
+            }
+        }
+
+        async function testChat() {
+            const message = document.getElementById('chat-message').value;
+            const responseDiv = document.getElementById('response-chat');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="loading">Sending message...</div>';
+            responseDiv.className = 'response';
+
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: message
+                    })
+                });
+
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <div class="status">Status: ${response.status} ${response.statusText}</div>
+                    <div>Response:</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                responseDiv.className = response.ok ? 'response success' : 'response error';
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="status">Error</div>
+                    <div>${error.message}</div>
+                `;
+                responseDiv.className = 'response error';
+            }
+        }
+
+        async function testGetFile() {
+            const filename = document.getElementById('filename').value;
+            if (!filename) {
+                alert('Please enter a filename');
+                return;
+            }
+
+            const responseDiv = document.getElementById('response-file');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="loading">Getting file content...</div>';
+            responseDiv.className = 'response';
+
+            try {
+                const response = await fetch(`${API_BASE}/files/${encodeURIComponent(filename)}`);
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <div class="status">Status: ${response.status} ${response.statusText}</div>
+                    <div>Response:</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                responseDiv.className = response.ok ? 'response success' : 'response error';
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="status">Error</div>
+                    <div>${error.message}</div>
+                `;
+                responseDiv.className = 'response error';
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,4 @@
+generated/
+*.pyc
+__pycache__/
+*.log
